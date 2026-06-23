@@ -1,7 +1,7 @@
 """
 toilet_db_builder.py
 --------------------
-Mevcut GeoJSON dosyasından (export_15_.geojson) tuvalet verilerini okur
+Mevcut GeoJSON dosyasından (toilets.geojson) tuvalet verilerini okur
 ve smartexit.db'ye "tuvaletler" tablosu olarak yazar.
 
 Kullanım:
@@ -14,7 +14,7 @@ import json
 import sqlite3
 import os
 
-GEOJSON_DOSYASI = "export_15_.geojson"
+GEOJSON_DOSYASI = "toilets.geojson"
 DB_DOSYASI      = "smartexit.db"
 
 
