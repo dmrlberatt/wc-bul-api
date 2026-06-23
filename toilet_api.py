@@ -140,6 +140,63 @@ async def tuvaletleri_getir(
     }
 
 
+@router.get("/api/v1/tuvaletler/tumu")
+async def tum_tuvaletleri_getir():
+    """Tüm İstanbul tuvalet verilerini döndürür — haritada toplu gösterim için."""
+    try:
+        conn   = db_baglan()
+        cursor = conn.cursor()
+
+        if not tuvalet_tablosu_var_mi(cursor):
+            conn.close()
+            raise HTTPException(status_code=503, detail="Veritabanı hazır değil.")
+
+        cursor.execute("""
+            SELECT id, osm_id, enlem, boylam, ad, ucretli, ucret_miktari,
+                   acilis_kapanis, engelli_erisimi, bebek_bakim, erisim_tipi,
+                   istanbulkart, kadinlar, erkekler, unisex
+            FROM tuvaletler
+            WHERE enlem IS NOT NULL AND boylam IS NOT NULL
+        """)
+        rows = cursor.fetchall()
+        conn.close()
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Veritabanı hatası: {str(e)}")
+
+    sonuclar = []
+    for row in rows:
+        t_lat = row["enlem"]
+        t_lon = row["boylam"]
+        if t_lat != t_lat or t_lon != t_lon:
+            continue
+        sonuclar.append({
+            "id":              row["id"],
+            "osm_id":          row["osm_id"],
+            "enlem":           t_lat,
+            "boylam":          t_lon,
+            "ad":              row["ad"],
+            "ucretli":         bool(row["ucretli"]),
+            "ucret_miktari":   row["ucret_miktari"],
+            "acilis_kapanis":  row["acilis_kapanis"],
+            "engelli_erisimi": bool(row["engelli_erisimi"]),
+            "bebek_bakim":     bool(row["bebek_bakim"]),
+            "erisim_tipi":     row["erisim_tipi"],
+            "istanbulkart":    bool(row["istanbulkart"]),
+            "kadinlar":        bool(row["kadinlar"]),
+            "erkekler":        bool(row["erkekler"]),
+            "unisex":          bool(row["unisex"]),
+            "mesafe_metre":    None,
+        })
+
+    return {
+        "durum":    "basarili",
+        "toplam":   len(sonuclar),
+        "tuvaletler": sonuclar,
+    }
+
+
 @router.get("/api/v1/tuvaletler/{tuvalet_id}")
 async def tuvalet_detay(tuvalet_id: int):
     """Tek bir tuvaleti ID ile getirir."""
